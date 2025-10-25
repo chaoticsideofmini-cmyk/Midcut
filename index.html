@@ -350,25 +350,28 @@
                 showTypingIndicator();
 
                 try {
+                    const payload = {
+                        "contents": [{
+                            "parts": [{ "text": text }]
+                        }],
+                        // 🟢 FIX: generationConfig is the correct key for model configuration
+                        "config": { 
+                            "systemInstruction": "You are MidCut AI, a brilliant, professional, and helpful assistant. Use markdown for formatting, especially triple backticks for code blocks. Keep answers accurate and well-structured."
+                        }
+                    };
+                    
                     const response = await fetch(GEMINI_API_URL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            "contents": [{
-                                "parts": [{ "text": text }]
-                            }],
-                            "config": {
-                                 "systemInstruction": "You are MidCut AI, a brilliant, professional, and helpful assistant. Use markdown for formatting, especially triple backticks for code blocks. Keep answers accurate and well-structured."
-                            }
-                        })
+                        body: JSON.stringify(payload) // Use the corrected payload
                     });
 
                     if (!response.ok) {
-                         // Attempt to read the error body
+                         // Read the error body for debugging
                          const errorBody = await response.text();
-                         throw new Error(`API Error: ${response.status} ${response.statusText}. Response: ${errorBody.substring(0, 100)}...`);
+                         throw new Error(`API Error: ${response.status}. Message: ${errorBody.substring(0, 100)}...`);
                     }
 
                     const data = await response.json();
@@ -418,5 +421,5 @@
         });
     </script>
 </body>
-  </html>
-  
+            </html>
+    
