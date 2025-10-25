@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MidCut AI - Professional Assistant</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #1a1a1a;        /* Deep Anthracite */
+            --card-color: #2c2c2c;      /* Slightly lighter card/message background */
+            --text-color: #ffffff;      /* Pure white text */
+            --subtle-text: #b0b0b0;     /* Placeholder/metadata text */
+            --accent-color: #007bff;    /* Professional Blue Accent */
+            --input-bg: #3c3c3c;
+            --code-bg: #222222;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 16px;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 960px; /* Wider professional view */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Header Style --- */
+        #header {
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--card-color);
+            text-align: left;
+            background-color: var(--card-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            margin: 0;
+            color: var(--accent-color);
+            font-size: 1.4em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Chat Area Style --- */
+        #chat-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px 30px 100px 30px;
+            scroll-behavior: smooth;
+        }
+
+        #initial-message {
+            text-align: center;
+            padding: 50px 0;
+            color: var(--subtle-text);
+            font-style: italic;
+        }
+
+        /* --- Message Styling (Professional Bubbles) --- */
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            line-height: 1.6;
+            border-radius: 12px;
+            animation: message-in 0.4s ease-out;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: var(--input-bg);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            background-color: var(--card-color);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* --- Code Block Styling (Monokai-like) --- */
+        .message pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0 0 0;
+            border: 1px solid #444;
+        }
+
+        /* --- Input Area Style --- */
+        #input-area {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 960px;
+            padding: 15px 30px;
+            background-color: var(--bg-color);
+            display: flex;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--card-color);
+            box-sizing: border-box;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 18px;
+            border: 1px solid #555;
+            border-radius: 24px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            resize: none; 
+            max-height: 80px; 
+            overflow-y: auto;
+        }
+
+        #user-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.4);
+        }
+
+        #send-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 25px;
+            margin-left: 10px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        #send-button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        
+        #send-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* --- Keyframe Animations --- */
+        @keyframes message-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 🟢 Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            margin: 0 4px;
+            animation: dot-bounce 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(1) { animation-delay: 0s; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+        }
+
+        /* Typewriter Text and Cursor */
+        .typewriter-text {
+            overflow: hidden;
+            white-space: pre-wrap;
+            display: inline;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background-color: var(--text-color);
+            animation: blink-cursor 0.75s step-end infinite;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
+
+        @keyframes blink-cursor {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <header id="header">
+            <h1 class="logo">MidCut AI <span style="font-size: 0.5em; color: var(--subtle-text); font-weight: 400;">(Gemini)</span></h1>
+        </header>
+
+        <main id="chat-area">
+            <div id="initial-message" class="message bot-message">
+                👋 Hello! I am **MidCut AI**, powered by Gemini. Ask me anything from software development to research!
+            </div>
+            <div id="messages-container">
+                </div>
+        </main>
+
+        <div id="input-area">
+            <textarea id="user-input" placeholder="Type your message..." rows="1" autofocus></textarea>
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 🔑 1. API KEY ADDED
+        // =========================================================================
+        const API_KEY = "AIzaSyCJbJwXSLmoF4f7uHKL2CWNP9nX_BZvZyk"; 
+        // =========================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const messagesContainer = document.getElementById('messages-container');
+            const chatArea = document.getElementById('chat-area');
+            const initialMessage = document.getElementById('initial-message');
+
+            const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+            
+            // --- Utility Functions ---
+
+            const scrollToBottom = () => {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            };
+
+            const createMessageElement = (htmlContent, senderClass) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', senderClass);
+                messageDiv.innerHTML = htmlContent; 
+                return messageDiv;
+            };
+
+            const addMessage = (htmlContent, sender) => {
+                if (initialMessage.style.display !== 'none') {
+                    initialMessage.style.display = 'none';
+                }
+                const senderClass = sender === 'user' ? 'user-message' : 'bot-message';
+                const messageElement = createMessageElement(htmlContent, senderClass);
+                messagesContainer.appendChild(messageElement);
+                scrollToBottom();
+                return messageElement;
+            };
+
+            // Function to simulate basic Markdown to HTML conversion (for code blocks)
+            const convertMarkdown = (text) => {
+                // Convert triple backticks code block to <pre> tags (simple implementation)
+                text = text.replace(/```(.*?)```/gs, (match, content) => {
+                    return `<pre>${content.trim()}</pre>`;
+                });
+                // Convert **bold** to <strong>
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                return text;
+            };
+
+            // --- Animated Typing Indicator (Bouncing Dots) ---
+            let typingIndicator = null;
+
+            const showTypingIndicator = () => {
+                const dotsHtml = '<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+                const indicatorElement = createMessageElement(dotsHtml, 'bot-message');
+                messagesContainer.appendChild(indicatorElement);
+                typingIndicator = indicatorElement;
+                scrollToBottom();
+            };
+
+            const removeTypingIndicator = () => {
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                    typingIndicator = null;
+                }
+            };
+            
+            // --- Typewriter Effect Function (Stream Simulation) ---
+            const applyTypewriterEffect = (element, text, speed = 25) => {
+                let i = 0;
+                let finalHtml = `<span class="typewriter-text"></span><span class="typing-cursor"></span>`;
+                element.innerHTML = finalHtml;
+                const textSpan = element.querySelector('.typewriter-text');
+                const cursor = element.querySelector('.typing-cursor');
+                // Clean the text to hide complex HTML tags (like <pre>) during the typing animation
+                const cleanText = text.replace(/<pre>.*?<\/pre>/gs, '<<<CODE>>>'); 
+
+                function type() {
+                    if (i < cleanText.length) {
+                        textSpan.textContent += cleanText.charAt(i);
+                        i++;
+                        scrollToBottom(); 
+                        setTimeout(type, speed);
+                    } else {
+                        // Typing complete, apply the full formatted text
+                        element.innerHTML = convertMarkdown(text);
+                        scrollToBottom();
+                    }
+                }
+                type();
+            };
+
+            // --- Main Send Handler ---
+            const handleSendMessage = async () => {
+                const text = userInput.value.trim();
+                
+                if (text === '') return;
+                
+                // 1. Add User Message
+                addMessage(text, 'user');
+                
+                // Disable input and clear field
+                userInput.value = '';
+                userInput.style.height = 'auto'; // Reset textarea height
+                userInput.disabled = true;
+                sendButton.disabled = true;
+                
+                // 2. Show Animated Typing Indicator
+                showTypingIndicator();
+
+                try {
+                    const response = await fetch(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            "contents": [{
+                                "parts": [{ "text": text }]
+                            }],
+                            "config": {
+                                 "systemInstruction": "You are MidCut AI, a brilliant, professional, and helpful assistant. Use markdown for formatting, especially triple backticks for code blocks. Keep answers accurate and well-structured."
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                         // Attempt to read the error body
+                         const errorBody = await response.text();
+                         throw new Error(`API Error: ${response.status} ${response.statusText}. Response: ${errorBody.substring(0, 100)}...`);
+                    }
+
+                    const data = await response.json();
+                    
+                    const botResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process your request. The response was empty.";
+                    
+                    // 3. Remove Indicator
+                    removeTypingIndicator();
+                    
+                    // 4. Add Bot Message and Apply Typewriter Effect
+                    const botMessageElement = addMessage('', 'bot'); 
+                    applyTypewriterEffect(botMessageElement, botResponseText, 25); 
+
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    removeTypingIndicator();
+                    addMessage(`**Connection Error:** Failed to connect to MidCut AI. Details: ${error.message}`, 'bot');
+                } finally {
+                    // Re-enable input
+                    userInput.disabled = false;
+                    sendButton.disabled = false;
+                    userInput.focus();
+                }
+            };
+
+            // Event Listeners
+            sendButton.addEventListener('click', handleSendMessage);
+            
+            userInput.addEventListener('keypress', (event) => {
+                // Send on Enter, allow Shift+Enter for new line
+                if (event.key === 'Enter' && !userInput.disabled && !event.shiftKey) {
+                    handleSendMessage();
+                    event.preventDefault();
+                }
+            });
+            
+            // Textarea auto-resize logic
+            userInput.addEventListener('input', () => {
+                userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 80) + 'px'; // Max 80px height
+            });
+
+
+            // Initial setup
+            userInput.focus();
+            scrollToBottom();
+        });
+    </script>
+</body>
+  </html>
+  
